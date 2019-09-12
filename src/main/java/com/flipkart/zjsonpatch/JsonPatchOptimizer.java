@@ -12,44 +12,58 @@ import java.util.Map;
 import static com.flipkart.zjsonpatch.Operation.*;
 
 public class JsonPatchOptimizer {
-    public static JsonNode optimize(ArrayNode patch) {
-        List<JsonNode> optimizedOperations = new ArrayList<JsonNode>();
 
-        Map<String, List<JsonNode>> operationsPerPath = new HashMap<String, List<JsonNode>>();
+    public static JsonNode optimize(ArrayNode patch) {
+        List<ObjectNode> optimizedOperations = new ArrayList<ObjectNode>();
+
+        Map<String, List<ObjectNode>> operationsPerPath = new HashMap<String, List<ObjectNode>>();
 
         for (JsonNode operation : patch) {
             String path = operation.get("path").asText();
             if (operationsPerPath.get(path) == null) {
-                addOperation(optimizedOperations, operationsPerPath, operation);
-            } else {
-                System.out.println(operationsPerPath);
-                if (isOp(REMOVE, operation)) {
-                    List<JsonNode> previousOperations = operationsPerPath.get(path);
-                    for (int i = previousOperations.size() - 1; i >= 0; i--) {
-                        JsonNode previousOperation = previousOperations.get(i);
-                        if (isOp(ADD, previousOperation) || (isOp(COPY, previousOperation) && stringEquals(previousOperation, operation, "path"))) {
+                operationsPerPath.put(path, new ArrayList<ObjectNode>());
+            }
 
-                            optimizedOperations.remove(previousOperation);
-                            previousOperations.remove(previousOperation);
+            String from = null;
+            if (operation.has("from")) {
+                from = operation.get("from").asText();
+                if (operationsPerPath.get(from) == null) {
+                    operationsPerPath.put(from, new ArrayList<ObjectNode>());
+                }
+            }
 
-                            for (int j = i; j < previousOperations.size(); j++) {
-                                ObjectNode subsequentPreviousOperation = (ObjectNode) previousOperations.get(j);
-                                if (isOp(COPY, subsequentPreviousOperation) && stringEquals(subsequentPreviousOperation, previousOperation, "from")) {
-                                    subsequentPreviousOperation.put("op", ADD.rfcName());
-                                    subsequentPreviousOperation.remove("from");
-                                    subsequentPreviousOperation.set("value", previousOperation.get("value"));
-                                }
+            List<ObjectNode> previousOperationsByPath = operationsPerPath.get(path);
+            List<ObjectNode> previousOperationsByFrom = operationsPerPath.get(from);
+            if (isOp(REMOVE, operation)) {
+                for (int i = previousOperationsByPath.size() - 1; i >= 0; i--) {
+                    JsonNode previousOperation = previousOperationsByPath.get(i);
+                    if (isOp(ADD, previousOperation) || (isOp(COPY, previousOperation) && stringEquals(previousOperation, operation, "path"))) {
+
+                        optimizedOperations.remove(previousOperation);
+                        previousOperationsByPath.remove(previousOperation);
+
+                        for (int j = i; j < previousOperationsByPath.size(); j++) {
+                            ObjectNode subsequentPreviousOperation = previousOperationsByPath.get(j);
+                            if (isOp(COPY, subsequentPreviousOperation) && stringEquals(subsequentPreviousOperation, previousOperation, "from")) {
+                                subsequentPreviousOperation.put("op", ADD.rfcName());
+                                subsequentPreviousOperation.remove("from");
+                                subsequentPreviousOperation.set("value", previousOperation.get("value"));
                             }
-                            break;
                         }
+                        break;
                     }
-                } else {
-                    addOperation(optimizedOperations, operationsPerPath, operation);
+                }
+            } else if (isOp(MOVE, operation) && !previousOperationsByFrom.isEmpty() && isOp(ADD, previousOperationsByFrom.get(previousOperationsByFrom.size() - 1))) {
+                ObjectNode previousOperation = previousOperationsByFrom.get(previousOperationsByFrom.size() - 1);
+                previousOperation.set("path", operation.get("path"));
+            } else {
+                operationsPerPath.get(path).add((ObjectNode) operation);
+                optimizedOperations.add((ObjectNode) operation);
+                if (isOp(COPY, operation) || isOp(MOVE, operation)) {
+                    operationsPerPath.get(operation.get("from").asText()).add((ObjectNode) operation);
                 }
             }
         }
-
-        System.out.println(operationsPerPath);
 
         ArrayNode optimizedPatch = patch.arrayNode(optimizedOperations.size());
         for (JsonNode op : optimizedOperations) {
@@ -67,24 +81,4 @@ public class JsonPatchOptimizer {
         return op.rfcName().equals(node.get("op").asText());
     }
 
-    private static void addOperation(List<JsonNode> optimizedOperations, Map<String, List<JsonNode>> operationsPerPath, JsonNode operation) {
-        String path = operation.get("path").asText();
-
-        ensureHasList(operationsPerPath, path);
-
-        operationsPerPath.get(path).add(operation);
-        optimizedOperations.add(operation);
-
-        if (isOp(COPY, operation)) {
-            path = operation.get("from").asText();
-            ensureHasList(operationsPerPath, path);
-            operationsPerPath.get(path).add(operation);
-        }
-    }
-
-    private static void ensureHasList(Map<String, List<JsonNode>> operationsPerPath, String path) {
-        if (!operationsPerPath.containsKey(path)) {
-            operationsPerPath.put(path, new ArrayList<JsonNode>());
-        }
-    }
 }
