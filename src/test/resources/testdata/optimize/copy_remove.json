@@ -1,0 +1,21 @@
+[
+  {
+    "op": "add",
+    "path": "/a",
+    "value": "bar"
+  },
+  {
+    "op": "add",
+    "path": "/b",
+    "value": "baz"
+  },
+  {
+    "op": "copy",
+    "path": "/c",
+    "from": "/a"
+  },
+  {
+    "op": "remove",
+    "path": "/c"
+  }
+]

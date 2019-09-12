@@ -63,12 +63,47 @@ public final class JsonDiff {
         return unchangedValues.get(value);
     }
 
+    public static JsonNode optimize(ArrayNode patch) {
+        List<JsonNode> optimizedOperations = new ArrayList<JsonNode>();
+
+        Map<String, List<JsonNode>> operationsPerPath = new HashMap<String, List<JsonNode>>();
+
+        for (JsonNode operation : patch) {
+            String path = operation.get("path").asText();
+            if (!operationsPerPath.containsKey(path)) {
+                operationsPerPath.put(path, new ArrayList<JsonNode>());
+            }
+            if (operationsPerPath.get(path).isEmpty()) {
+                operationsPerPath.get(path).add(operation);
+                optimizedOperations.add(operation);
+            } else {
+                if (Operation.REMOVE.rfcName().equals(operation.get("op").asText())) {
+                    List<JsonNode> previousOperations = operationsPerPath.get(path);
+                    for (int i = previousOperations.size() - 1; i >= 0; i--) {
+                        if (Operation.ADD.rfcName().equals(previousOperations.get(i).get("op").asText()) || Operation.COPY.rfcName().equals(previousOperations.get(i).get("op").asText())) {
+                            optimizedOperations.remove(previousOperations.get(i));
+                            previousOperations.remove(i);
+                        }
+                    }
+                }
+            }
+        }
+
+        ArrayNode optimizedPatch = patch.arrayNode(optimizedOperations.size());
+        for (JsonNode op : optimizedOperations) {
+            optimizedPatch.add(op);
+        }
+
+        return optimizedPatch;
+    }
+
     private void introduceCopyOperation(JsonNode source, JsonNode target) {
         Map<JsonNode, JsonPointer> unchangedValues = getUnchangedPart(source, target);
 
         for (int i = 0; i < diffs.size(); i++) {
             Diff diff = diffs.get(i);
-            if (Operation.ADD != diff.getOperation()) continue;
+            if (Operation.ADD != diff.getOperation())
+                continue;
 
             JsonPointer matchingValuePath = getMatchingValuePath(unchangedValues, diff.getValue());
             if (matchingValuePath != null && isAllowed(matchingValuePath, diff.getPath())) {
@@ -180,7 +215,7 @@ public final class JsonDiff {
 
             // if not remove OR add, move to next diff
             if (!(Operation.REMOVE == diff1.getOperation() ||
-                    Operation.ADD == diff1.getOperation())) {
+                Operation.ADD == diff1.getOperation())) {
                 continue;
             }
 
@@ -192,12 +227,12 @@ public final class JsonDiff {
 
                 Diff moveDiff = null;
                 if (Operation.REMOVE == diff1.getOperation() &&
-                        Operation.ADD == diff2.getOperation()) {
+                    Operation.ADD == diff2.getOperation()) {
                     JsonPointer relativePath = computeRelativePath(diff2.getPath(), i + 1, j - 1, diffs);
                     moveDiff = new Diff(Operation.MOVE, diff1.getPath(), relativePath);
 
                 } else if (Operation.ADD == diff1.getOperation() &&
-                        Operation.REMOVE == diff2.getOperation()) {
+                    Operation.REMOVE == diff2.getOperation()) {
                     JsonPointer relativePath = computeRelativePath(diff2.getPath(), i, j - 1, diffs); // diff1's add should also be considered
                     moveDiff = new Diff(Operation.MOVE, relativePath, diff1.getPath());
                 }
@@ -349,7 +384,6 @@ public final class JsonDiff {
             JsonNode lcsNode = lcs.get(lcsIdx);
             JsonNode srcNode = source.get(srcIdx);
             JsonNode targetNode = target.get(targetIdx);
-
 
             if (lcsNode.equals(srcNode) && lcsNode.equals(targetNode)) { // Both are same as lcs node, nothing to do here
                 srcIdx++;
