@@ -37,7 +37,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <compileSource>1.6</compileSource>
+        <compileSource>1.8</compileSource>
         <testCompileSource>1.8</testCompileSource>
 
         <jackson.version>2.9.8</jackson.version>
