@@ -1,0 +1,46 @@
+[
+  {
+    "op": "add",
+    "path": "/a",
+    "value": "bar"
+  },
+  {
+    "op": "add",
+    "path": "/z",
+    "value": "baz"
+  },
+  {
+    "op": "move",
+    "path": "/b",
+    "from": "/a"
+  },
+  {
+    "op": "move",
+    "path": "/c",
+    "from": "/b"
+  },
+  {
+    "op": "test",
+    "path": "/c",
+    "value": "bar"
+  },
+  {
+    "op": "move",
+    "path": "/d",
+    "from": "/c"
+  },
+  {
+    "op": "move",
+    "path": "/e",
+    "from": "/d"
+  },
+  {
+    "op": "move",
+    "path": "/f",
+    "from": "/e"
+  },
+  {
+    "op": "remove",
+    "path": "/f"
+  }
+]

@@ -17,43 +17,42 @@ public class JsonPatchOptimizerTest {
         jsonPatchOptimizer = new JsonPatchOptimizer();
     }
 
-    @Test
-    public void shouldOptimizeSequenceAddRemove() throws Exception {
-        JsonNode patch = TestUtils.loadResourceAsJsonNode("/testdata/optimize/add_remove.json");
+    private void assertPatchOptimized(String input, String expectedOutput) throws Exception {
+        JsonNode patch = TestUtils.loadResourceAsJsonNode(input);
 
         JsonNode optimized = jsonPatchOptimizer.optimize((ArrayNode) patch);
-        JsonNode expectedOptimized = TestUtils.loadResourceAsJsonNode("/testdata/optimize/add_remove.optimized.json");
+        JsonNode expectedOptimized = TestUtils.loadResourceAsJsonNode(expectedOutput);
 
         assertThat(optimized, equalTo(expectedOptimized));
+    }
+
+    @Test
+    public void shouldOptimizeSequenceAddRemove() throws Exception {
+        assertPatchOptimized("/testdata/optimize/add_remove.json", "/testdata/optimize/add_remove.optimized.json");
     }
 
     @Test
     public void shouldOptimizeSequenceCopyRemove() throws Exception {
-        JsonNode patch = TestUtils.loadResourceAsJsonNode("/testdata/optimize/copy_remove.json");
-
-        JsonNode optimized = jsonPatchOptimizer.optimize((ArrayNode) patch);
-        JsonNode expectedOptimized = TestUtils.loadResourceAsJsonNode("/testdata/optimize/copy_remove.optimized.json");
-
-        assertThat(optimized, equalTo(expectedOptimized));
+        assertPatchOptimized("/testdata/optimize/copy_remove.json", "/testdata/optimize/copy_remove.optimized.json");
     }
 
     @Test
     public void shouldOptimizeSequenceAddCopyRemove() throws Exception {
-        JsonNode patch = TestUtils.loadResourceAsJsonNode("/testdata/optimize/add_copy_remove.json");
-
-        JsonNode optimized = jsonPatchOptimizer.optimize((ArrayNode) patch);
-        JsonNode expectedOptimized = TestUtils.loadResourceAsJsonNode("/testdata/optimize/add_copy_remove.optimized.json");
-
-        assertThat(optimized, equalTo(expectedOptimized));
+        assertPatchOptimized("/testdata/optimize/add_copy_remove.json", "/testdata/optimize/add_copy_remove.optimized.json");
     }
 
     @Test
     public void shouldOptimizeSequenceAddMove() throws Exception {
-        JsonNode patch = TestUtils.loadResourceAsJsonNode("/testdata/optimize/add_move.json");
+        assertPatchOptimized("/testdata/optimize/add_move.json", "/testdata/optimize/add_move.optimized.json");
+    }
 
-        JsonNode optimized = jsonPatchOptimizer.optimize((ArrayNode) patch);
-        JsonNode expectedOptimized = TestUtils.loadResourceAsJsonNode("/testdata/optimize/add_move.optimized.json");
+    @Test
+    public void shouldOptimizeSequenceAddMoveRemove() throws Exception {
+        assertPatchOptimized("/testdata/optimize/add_move_remove.json", "/testdata/optimize/add_move_remove.optimized.json");
+    }
 
-        assertThat(optimized, equalTo(expectedOptimized));
+    @Test
+    public void shouldOptimizeSequenceAddReplace() throws Exception {
+        assertPatchOptimized("/testdata/optimize/add_replace.json", "/testdata/optimize/add_replace.optimized.json");
     }
 }

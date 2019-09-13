@@ -1,0 +1,37 @@
+[
+  {
+    "op": "add",
+    "path": "/a",
+    "value": "bar"
+  },
+  {
+    "op": "add",
+    "path": "/z",
+    "value": "baz"
+  },
+  {
+    "op": "replace",
+    "path": "/a",
+    "value": "replace1"
+  },
+  {
+    "op": "replace",
+    "path": "/a",
+    "value": "replace2"
+  },
+  {
+    "op": "replace",
+    "path": "/a",
+    "value": "replace3"
+  },
+  {
+    "op": "replace",
+    "path": "/a",
+    "value": "replace4"
+  },
+  {
+    "op": "replace",
+    "path": "/a",
+    "value": "replace5"
+  }
+]
