@@ -63,7 +63,7 @@ public class JsonPatchOptimizer {
             }
 
             ObjectNode previousOperation = operations.get(previousIdx);
-            if (isOp(ADD, previousOperation) || isOp(MOVE, previousOperation)) {
+            if (isOp(ADD, previousOperation) || isOp(MOVE, previousOperation) || isOp(COPY, previousOperation)) {
                 removeOperation(operations, idx);
                 previousOperation.set("path", operation.get("path"));
             }
@@ -135,6 +135,14 @@ public class JsonPatchOptimizer {
             if (isOp(REPLACE, previousOperation) || isOp(ADD, previousOperation)) {
                 removeOperation(operations, idx);
                 previousOperation.set("value", operation.get("value"));
+                return;
+            }
+
+            if (isOp(COPY, previousOperation)) {
+                removeOperation(operations, idx);
+                previousOperation.put("op", ADD.rfcName());
+                previousOperation.set("value", operation.get("value"));
+                previousOperation.remove("from");
             }
         }
 
@@ -182,6 +190,9 @@ public class JsonPatchOptimizer {
             operations.add((ObjectNode) patch.get(i));
         }
 
+        for (OperationOptimizer operationOptimizer : operationOptimizers) {
+            operationOptimizer.optimize(operations);
+        }
         for (OperationOptimizer operationOptimizer : operationOptimizers) {
             operationOptimizer.optimize(operations);
         }

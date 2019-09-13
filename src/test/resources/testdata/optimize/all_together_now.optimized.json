@@ -5,6 +5,10 @@
     "value": "baz"
   },
   {
+    "op": "remove",
+    "path": "/t"
+  },
+  {
     "op": "add",
     "path": "/d",
     "value": "foo"
