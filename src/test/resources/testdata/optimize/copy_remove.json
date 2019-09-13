@@ -6,16 +6,25 @@
   },
   {
     "op": "add",
-    "path": "/b",
+    "path": "/z",
     "value": "baz"
   },
   {
     "op": "copy",
-    "path": "/c",
+    "path": "/b",
     "from": "/a"
+  },
+  {
+    "op": "copy",
+    "path": "/c",
+    "from": "/b"
   },
   {
     "op": "remove",
     "path": "/c"
+  },
+  {
+    "op": "remove",
+    "path": "/b"
   }
 ]

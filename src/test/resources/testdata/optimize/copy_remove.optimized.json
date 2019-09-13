@@ -6,7 +6,7 @@
   },
   {
     "op": "add",
-    "path": "/b",
+    "path": "/z",
     "value": "baz"
   }
 ]

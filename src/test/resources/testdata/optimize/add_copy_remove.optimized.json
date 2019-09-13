@@ -1,12 +1,17 @@
 [
   {
     "op": "add",
-    "path": "/b",
+    "path": "/z",
     "value": "baz"
   },
   {
     "op": "add",
-    "path": "/c",
+    "path": "/b",
     "value": "bar"
+  },
+  {
+    "op": "copy",
+    "path": "/c",
+    "from": "/b"
   }
 ]

@@ -1,12 +1,12 @@
 [
   {
     "op": "add",
-    "path": "/c",
+    "path": "/f",
     "value": "bar"
   },
   {
     "op": "add",
-    "path": "/b",
+    "path": "/z",
     "value": "baz"
   }
 ]
