@@ -10,24 +10,28 @@
     "value": "baz"
   },
   {
+    "op": "replace",
+    "path": "/a",
+    "from": "replace1"
+  },
+  {
     "op": "move",
     "path": "/b",
     "from": "/a"
   },
   {
-    "op": "move",
-    "path": "/c",
-    "from": "/b"
+    "op": "test",
+    "path": "/b",
+    "value": "bar_replaced"
   },
   {
-    "op": "test",
-    "path": "/c",
-    "value": "bar"
+    "op": "remove",
+    "path": "/b"
   },
   {
-    "op": "test",
+    "op": "add",
     "path": "/c",
-    "value": "bar"
+    "value": "foo"
   },
   {
     "op": "move",
@@ -35,17 +39,18 @@
     "from": "/c"
   },
   {
-    "op": "move",
-    "path": "/e",
+    "op": "copy",
+    "path": "/y",
     "from": "/d"
   },
   {
     "op": "move",
-    "path": "/f",
-    "from": "/e"
+    "path": "/m",
+    "from": "/y"
   },
   {
-    "op": "remove",
-    "path": "/f"
+    "op": "replace",
+    "path": "/m",
+    "value": "foo_replaced"
   }
 ]

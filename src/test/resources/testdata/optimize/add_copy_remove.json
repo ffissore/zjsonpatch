@@ -10,6 +10,11 @@
     "value": "bar"
   },
   {
+    "op": "test",
+    "path": "/a",
+    "value": "bar"
+  },
+  {
     "op": "add",
     "path": "/z",
     "value": "baz"

@@ -55,4 +55,9 @@ public class JsonPatchOptimizerTest {
     public void shouldOptimizeSequenceAddReplace() throws Exception {
         assertPatchOptimized("/testdata/optimize/add_replace.json", "/testdata/optimize/add_replace.optimized.json");
     }
+
+    @Test
+    public void shouldOptimizeComplexSequence() throws Exception {
+        assertPatchOptimized("/testdata/optimize/all_together_now.json", "/testdata/optimize/all_together_now.optimized.json");
+    }
 }

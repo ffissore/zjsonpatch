@@ -28,15 +28,20 @@ public class JsonPatchOptimizer {
             }
         }
 
-        protected int searchForPreviousOperation(List<ObjectNode> operations, ObjectNode operation, String field, int fromIdx, String targetField) {
+        protected int searchForNonTestPreviousOperation(List<ObjectNode> operations, ObjectNode operation, String field, int fromIdx, String targetField) {
+            return searchForPreviousOperation(operations, operation, field, fromIdx, targetField, TEST);
+        }
+
+        protected int searchForPreviousOperation(List<ObjectNode> operations, ObjectNode operation, String field, int fromIdx, String targetField, Operation filteredOutOperation) {
             if (!operation.hasNonNull(field)) {
                 return -1;
             }
 
-            String path = operation.get(field).asText();
+            String fieldValue = operation.get(field).asText();
             for (int i = fromIdx - 1; i >= 0; i--) {
                 ObjectNode op = operations.get(i);
-                if (op != null && op.hasNonNull(targetField) && path.equals(op.get(targetField).asText())) {
+                if (op != null && (filteredOutOperation == null || !isOp(filteredOutOperation, op)) &&
+                    op.hasNonNull(targetField) && fieldValue.equals(op.get(targetField).asText())) {
                     return i;
                 }
             }
@@ -52,7 +57,7 @@ public class JsonPatchOptimizer {
 
         @Override
         protected void optimize(ObjectNode operation, List<ObjectNode> operations, int idx) {
-            int previousIdx = searchForPreviousOperation(operations, operation, "from", idx, "path");
+            int previousIdx = searchForNonTestPreviousOperation(operations, operation, "from", idx, "path");
             if (previousIdx == -1) {
                 return;
             }
@@ -74,7 +79,7 @@ public class JsonPatchOptimizer {
 
         @Override
         protected void optimize(ObjectNode operation, List<ObjectNode> operations, int idx) {
-            int previousIdx = searchForPreviousOperation(operations, operation, "path", idx, "from");
+            int previousIdx = searchForNonTestPreviousOperation(operations, operation, "path", idx, "from");
             if (previousIdx == -1) {
                 optimizeRemoveAddOrCopy(operation, operations, idx);
                 return;
@@ -82,7 +87,7 @@ public class JsonPatchOptimizer {
 
             ObjectNode previousOperation = operations.get(previousIdx);
             if (isOp(COPY, previousOperation)) {
-                int previousPreviousIdx = searchForPreviousOperation(operations, operation, "path", previousIdx, "path");
+                int previousPreviousIdx = searchForNonTestPreviousOperation(operations, operation, "path", previousIdx, "path");
                 if (previousPreviousIdx == -1 || !isOp(ADD, operations.get(previousPreviousIdx))) {
                     optimizeRemoveAddOrCopy(operation, operations, idx);
                     return;
@@ -99,7 +104,7 @@ public class JsonPatchOptimizer {
         }
 
         private void optimizeRemoveAddOrCopy(ObjectNode operation, List<ObjectNode> operations, int idx) {
-            int previousIdx = searchForPreviousOperation(operations, operation, "path", idx, "path");
+            int previousIdx = searchForNonTestPreviousOperation(operations, operation, "path", idx, "path");
             if (previousIdx == -1) {
                 return;
             }
@@ -121,7 +126,7 @@ public class JsonPatchOptimizer {
 
         @Override
         protected void optimize(ObjectNode operation, List<ObjectNode> operations, int idx) {
-            int previousIdx = searchForPreviousOperation(operations, operation, "path", idx, "path");
+            int previousIdx = searchForNonTestPreviousOperation(operations, operation, "path", idx, "path");
             if (previousIdx == -1) {
                 return;
             }
@@ -139,10 +144,32 @@ public class JsonPatchOptimizer {
         }
     }
 
+    private static class TestOperationOptimizer extends OperationOptimizer {
+
+        @Override
+        protected void optimize(ObjectNode operation, List<ObjectNode> operations, int idx) {
+            int previousIdx = searchForPreviousOperation(operations, operation, "path", idx, "path", null);
+            if (previousIdx == -1) {
+                removeOperation(operations, idx);
+                return;
+            }
+
+            ObjectNode previousOperation = operations.get(previousIdx);
+            if (isOp(TEST, previousOperation)) {
+                removeOperation(operations, idx);
+            }
+        }
+
+        @Override
+        protected Operation getOp() {
+            return TEST;
+        }
+    }
+
     private final List<OperationOptimizer> operationOptimizers;
 
     public JsonPatchOptimizer() {
-        this(Arrays.asList(new MoveOperationOptimizer(), new ReplaceOperationOptimizer(), new RemoveOperationOptimizer()));
+        this(Arrays.asList(new MoveOperationOptimizer(), new ReplaceOperationOptimizer(), new RemoveOperationOptimizer(), new TestOperationOptimizer()));
     }
 
     public JsonPatchOptimizer(List<OperationOptimizer> operationOptimizers) {
@@ -166,10 +193,6 @@ public class JsonPatchOptimizer {
         }
 
         return patch;
-    }
-
-    private static boolean stringEquals(JsonNode node1, JsonNode node2, String path) {
-        return node1.get(path).asText().equals(node2.get("path").asText());
     }
 
     private static boolean isOp(Operation op, JsonNode operation) {
